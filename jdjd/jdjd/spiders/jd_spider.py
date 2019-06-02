@@ -6,7 +6,7 @@ from jdjd.items import JDItem
 
 class JDSpider(scrapy.Spider):    
     # 爬虫名字
-    name = 'jd_spider'
+    name = 'jdspider'
     
     allowed_domains = ['jd.com', 'p.3.cn']
     
@@ -33,6 +33,17 @@ class JDSpider(scrapy.Spider):
 
             # 每一个gl_item都对应着一个商品，即对应着我们的采集项，所以这里建立jdItem
             item = JDItem()
+            item['id'] = ''
+            item['title'] = ''
+            item['url'] = ''
+            item['price'] = 0.0
+            item['brand'] = ''
+            item['model'] = ''
+            item['color'] = ''
+            item['ratio'] = ''
+            item['resolution'] = ''
+            item['refresh_rate'] = ''
+            item['luminance'] = ''
             
             # 获取详情页地址, 如果地址以//开头, 转换成 http://
             url = gl_item.css('.gl-i-wrap .p-name a::attr(href)').extract_first('')
@@ -43,8 +54,9 @@ class JDSpider(scrapy.Spider):
             # 获取价格 先拿到商品id 再访问取价格的URL
             item['id'] = gl_item.css('.gl-item div::attr(data-sku)').extract_first()
             yield scrapy.Request(url=self.price_url%(item['id']), callback=self.parsePrice, meta={'item':item})
+           
 
-        if self.page < 1:
+        if self.page < 100:
             self.page += 1
 
             # 下一页
@@ -68,7 +80,7 @@ class JDSpider(scrapy.Spider):
         item = response.meta['item']
 
         # 商品标题
-        title = response.css('#spec-img::attr(alt)').extract_first('')
+        item['title'] = response.css('#spec-img::attr(alt)').extract_first('')
 
         # 参数列表
         ptable = response.css('.Ptable .clearfix')
