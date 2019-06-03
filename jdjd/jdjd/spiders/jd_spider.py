@@ -17,14 +17,14 @@ class JDSpider(scrapy.Spider):
     page = 1
     
     # 列表页地址(category, page)
-    top_thirty_url = 'https://list.jd.com/list.html?cat=%d&page=%d'
+    list_url = 'https://list.jd.com/list.html?cat=%d&page=%d'
     
     # 商品价格查询地址(id)
     price_url = 'https://p.3.cn/prices/mgets?skuIds=J_%s'
 
     def start_requests(self):
         # 请求 商品列表页的第1页
-        yield scrapy.Request(url=self.top_thirty_url%(self.category, self.page), callback=self.parse)
+        yield scrapy.Request(url=self.list_url%(self.category, self.page), callback=self.parse)
 
     def parse(self, response):
         # 商品列表页gl-item列表
@@ -45,22 +45,21 @@ class JDSpider(scrapy.Spider):
             item['refresh_rate'] = ''
             item['luminance'] = ''
             
-            # 获取详情页地址, 如果地址以//开头, 转换成 http://
-            url = gl_item.css('.gl-i-wrap .p-name a::attr(href)').extract_first('')
+            # 获取详情页地址, 如果地址以//开头, 转换成 https://
+            url = gl_item.css('.gl-i-wrap .p-name a::attr(href)').extract_first()
             if url.startswith('//'):
-                url = ''.join(['http:', url])
+                url = ''.join(['https:', url])
             item['url'] = url
 
             # 获取价格 先拿到商品id 再访问取价格的URL
             item['id'] = gl_item.css('.gl-item div::attr(data-sku)').extract_first()
             yield scrapy.Request(url=self.price_url%(item['id']), callback=self.parsePrice, meta={'item':item})
            
-
         if self.page < 100:
             self.page += 1
 
             # 下一页
-            yield scrapy.Request(url=self.top_thirty_url%(self.category, self.page), callback=self.parse)
+            yield scrapy.Request(url=self.list_url%(self.category, self.page), callback=self.parse)
 
     
     def parsePrice(self, response): 
@@ -103,6 +102,6 @@ class JDSpider(scrapy.Spider):
             if pitem in pitem_map:
                 item[pitem_map[pitem]] = pval
 
-            # 提交这个item            
-            yield item
+        # 提交这个item            
+        yield item
             
