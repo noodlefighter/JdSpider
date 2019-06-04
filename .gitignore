@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+/JdSpider-show/JdSpider-show/bin/Debug
+
+.vs/
+bin/
+obj/
